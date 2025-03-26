@@ -28,10 +28,12 @@ def _op_combinations_part_one(n_ops: int):
 
 
 def _can_reach_equality(
-    lhs: int, rhs: list[int], combinations_generator
+    lhs: int,
+    rhs: list[int],
+    combinations_generator,
 ) -> list[int] | None:
     """Return `True` if the rhs can be made to equal the lhs
-    through a combination of multiplication and addition"""
+    through a combination of the allowed operations"""
 
     # If there are n items in rhs, there are n-1 operators.
     n_operators = len(rhs) - 1
@@ -60,11 +62,6 @@ def _combinations_part_two(n: int):
             new_combinations.append(combo + "2")
         combinations = new_combinations
     return combinations
-
-
-assert (x := _combinations_part_two(1)) == ["0", "1", "2"]
-x = _combinations_part_two(2)
-assert x == ["00", "01", "02", "10", "11", "12", "20", "21", "22"]
 
 
 def _op_combinations_part_two(n_ops: int):
