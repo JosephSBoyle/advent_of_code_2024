@@ -7,10 +7,10 @@
 """
 
 lines = open("day_7_data.txt").readlines()
+total_part_two = 0
 total_part_one = 0
 
-
-ALLOWED_OPS = (int.__add__, int.__mul__)
+ALLOWED_OPS_PART_ONE = (int.__add__, int.__mul__)
 
 
 def _combinations(n_ops: int):
@@ -21,19 +21,21 @@ def _combinations(n_ops: int):
         yield binary_representation
 
 
-def _op_combinations(n_ops: int):
+def _op_combinations_part_one(n_ops: int):
     for c in _combinations(n_ops):
-        c = [ALLOWED_OPS[int(o)] for o in c]
+        c = [ALLOWED_OPS_PART_ONE[int(o)] for o in c]
         yield c
 
 
-def _can_reach_equality(lhs: int, rhs: list[int]) -> list[int] | None:
+def _can_reach_equality(
+    lhs: int, rhs: list[int], combinations_generator
+) -> list[int] | None:
     """Return `True` if the rhs can be made to equal the lhs
     through a combination of multiplication and addition"""
 
     # If there are n items in rhs, there are n-1 operators.
     n_operators = len(rhs) - 1
-    for op_combination in _op_combinations(n_operators):
+    for op_combination in combinations_generator(n_operators):
         rhs_running_total = rhs[0]
 
         for operand_two_index, op in enumerate(op_combination, start=1):
@@ -43,12 +45,44 @@ def _can_reach_equality(lhs: int, rhs: list[int]) -> list[int] | None:
             return lhs
 
 
+int_concat = lambda a, b: int(str(a) + str(b))
+assert int_concat(1, 22) == 122
+ALLOWED_OPS_PART_TWO = (int.__add__, int.__mul__, int_concat)
+
+
+def _combinations_part_two(n: int):
+    combinations = ["0", "1", "2"]
+    for _ in range(n - 1):
+        new_combinations = []
+        for combo in combinations:
+            new_combinations.append(combo + "0")
+            new_combinations.append(combo + "1")
+            new_combinations.append(combo + "2")
+        combinations = new_combinations
+    return combinations
+
+
+assert (x := _combinations_part_two(1)) == ["0", "1", "2"]
+x = _combinations_part_two(2)
+assert x == ["00", "01", "02", "10", "11", "12", "20", "21", "22"]
+
+
+def _op_combinations_part_two(n_ops: int):
+    for c in _combinations_part_two(n_ops):
+        c = [ALLOWED_OPS_PART_TWO[int(o)] for o in c]
+        yield c
+
+
 for l in lines:
     lhs, rhs = l.split(":")
     lhs = int(lhs)
     rhs = [int(x) for x in rhs.split()]
 
-    if value := _can_reach_equality(lhs, rhs):
+    if value := _can_reach_equality(lhs, rhs, _op_combinations_part_one):
         total_part_one += value
 
+    if value := _can_reach_equality(lhs, rhs, _op_combinations_part_two):
+        total_part_two += value
+
 print(f"{total_part_one=}")
+print(f"{total_part_two=}")
