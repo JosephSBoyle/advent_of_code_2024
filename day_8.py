@@ -43,6 +43,7 @@ antennae on the same position).
 """
 
 from collections import defaultdict
+from itertools import combinations
 
 
 def read_input() -> dict[str, list[complex]]:
@@ -51,7 +52,7 @@ def read_input() -> dict[str, list[complex]]:
     grid_length = len(lines)
     for i, line in enumerate(lines):
         assert len(line) == grid_length, breakpoint()
-        
+
         for j, char in enumerate(line):
             if char == ".":
                 continue
@@ -63,10 +64,10 @@ def read_input() -> dict[str, list[complex]]:
 
 char_to_argand, grid_length = read_input()
 
+
 def compute_antinode_positions(
     char_to_argand: dict[str, list[complex]],
 ) -> list[complex]:
-    from itertools import combinations
 
     antinode_positions = []
     for argands in char_to_argand.values():
@@ -74,7 +75,7 @@ def compute_antinode_positions(
             n1_to_n2 = n2 - n1
             antinode1 = n1 - n1_to_n2
             antinode2 = n1 + 2 * n1_to_n2
-            
+
             # sanity check vector maths
             assert antinode2 == n2 + n1_to_n2
 
@@ -84,7 +85,7 @@ def compute_antinode_positions(
 
 
 def is_in_grid(position: complex, max_real: int, max_imaginary: int) -> bool:
-    """Return True for a value in [0..max_real) + [0..max_imaginary)j """
+    """Return True for a value in [0..max_real) + [0..max_imaginary)j"""
     return all(
         (
             position.real >= 0,
@@ -106,3 +107,44 @@ part_one_solution = len(
     ]
 )
 print(f"{part_one_solution=}")
+
+
+"""Instead of antinodes occuring at -v and +2v, now they occur at any integer
+multiple of v, including at +0v. Consequently, there are infinitely many antinodes
+for any given pair. Fortunately, you can stop generating once you generate a node
+which is not on the grid (any further nodes *in that direction* will also not be
+on the grid)."""
+
+
+def compute_antinode_positions_part_two(char_to_argand) -> list[complex]:
+    antinode_positions = []
+    for argands in char_to_argand.values():
+        for n1, n2 in combinations(argands, 2):
+            n1_to_n2 = n2 - n1
+            coefficient = 0
+            # generate antinodes in the negative direction
+            while True:
+                position = n1 + (coefficient * n1_to_n2)
+                if not is_in_grid(position, grid_length, grid_length):
+                    break
+
+                antinode_positions.append(position)
+                coefficient -= 1
+
+            # generate antinodes in the positive direction
+            # start from one -- we already have n1 in our antinode list
+            # (minor optimisation since we will filter duplicates in any case)
+            coefficient = 1
+            while True:
+                position = n1 + (coefficient * n1_to_n2)
+                if not is_in_grid(position, grid_length, grid_length):
+                    break
+
+                antinode_positions.append(position)
+                coefficient += 1
+    return antinode_positions
+
+
+antinode_positions_part_two = compute_antinode_positions_part_two(char_to_argand)
+unique_positions_part_two = len(set(antinode_positions_part_two))
+print(f"{unique_positions_part_two=}")
