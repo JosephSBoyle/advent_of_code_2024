@@ -15,13 +15,14 @@ No matter how the stones change, their order is preserved, and they stay on thei
 
 """
 
-str2int2str = lambda s: str(int(s))
-# cut_trailing_zeros = lambda s: "0" if s.startswith("0") else s
 from functools import cache
 
-@cache
-def tick_stone(stone : str) -> list[str]:
 
+str2int2str = lambda s: str(int(s))
+
+
+@cache
+def tick_stone(stone: str) -> list[str]:
     o = []
     if stone == "0":
         o.append("1")
@@ -36,45 +37,9 @@ def tick_stone(stone : str) -> list[str]:
         o.append(str(int(stone) * 2024))
     return o
 
-def tick(l: list[str]) -> list[str]:
-    """One tick AKA one blink."""
-    o = []
-    for stone in l:
-        o.extend(tick_stone(stone))
-    return o
-
-
-tick_1 = tick(["125", "17"])
-assert tick_1 == ["253000", "1", "7"], tick_1
-tick_2 = tick(tick_1)
-assert tick_2 == ["253", "0", "2024", "14168"], tick_2
-
-
-def n_ticks(l: list[str], n: int) -> list[str]:
-    for _ in range(n):
-        l = tick(l)
-    return l
-
-
-def q1():
-    l: list[str] = open("day_11.txt").read().split()
-    l = n_ticks(l, 25)
-    return len(l)
-
-
-question_one_answer = q1()
-print(f"{question_one_answer=}")
-assert question_one_answer == 186_424
-
-
-# each stone is independent of the others + always leads to a fixed output for given value.
-
-from functools import cache
-
 
 @cache
 def compute_stones_after_n_ticks(stone: str, ticks: int) -> int:
-    # print(stone, ticks)
     # Special case: bottom of the recursion
     if ticks == 1:
         if (len(stone) % 2) == 0:  # Stone has even length
@@ -85,32 +50,27 @@ def compute_stones_after_n_ticks(stone: str, ticks: int) -> int:
         n = 0
         # General case -- more than one tick
         stones = tick_stone(stone)
-        ticks -= 1
-        for stone in stones: # Either one or two stones           
-            n += compute_stones_after_n_ticks(stone, ticks)
+        for stone in stones:
+            n += compute_stones_after_n_ticks(stone, ticks - 1)
 
         return n
 
-def q2():
-    l: list[str] = open("day_11.txt").read().split()
-    total_stones_after_n_ticks = 0
-    for stone in l:
-        total_stones_after_n_ticks += compute_stones_after_n_ticks(stone, ticks=75)
-    return total_stones_after_n_ticks
+
+def compute_from_stones(stones: list[str], ticks: int) -> int:
+    n = 0
+    for stone in stones:
+        n += compute_stones_after_n_ticks(stone, ticks)
+    return n
 
 
-def q1_v2():
-    l: list[str] = open("day_11.txt").read().split()
-    total_stones_after_n_ticks = 0
-    for stone in l:
-        total_stones_after_n_ticks += compute_stones_after_n_ticks(stone, ticks=25)
-    return total_stones_after_n_ticks
+STONES: list[str] = open("day_11.txt").read().split()
 
 
-question_one_answer_with_caching = q1_v2()
-assert (
-    question_one_answer_with_caching == question_one_answer
-), question_one_answer_with_caching
-question_two_answer = q2()
+question_one_answer = compute_from_stones(STONES, 25)
+question_two_answer = compute_from_stones(STONES, 75)
+
+print(f"{question_one_answer=}")
 print(f"{question_two_answer=}")
-assert question_two_answer
+
+assert question_one_answer == 186_424
+assert question_two_answer == 219_838_428_124_832
