@@ -1,8 +1,11 @@
 MAP = {
     (i + 1j * j): char
-    for i, line in enumerate(open("day_12.txt").readlines())
+    # for i, line in enumerate(open("day_12_test.txt").read().split())
+    # for i, line in enumerate(open("day_12_test_2.txt").read().split())
+    for i, line in enumerate(open("day_12.txt").read().split())
     for j, char in enumerate(line)
 }
+assert "\n" not in MAP  # otherwise you've parsed it wrong!
 
 # 1. For each unique *value* (crop type) in M, find each of the contiguous
 # plots.
@@ -14,43 +17,54 @@ T = set(MAP.values())
 DIRECTIONS = (-1, +1, -1j, +1j)
 
 
-def expand_plot(plot_stack: list[complex], perimeter: int = 0) -> set[complex]:
+def expand_plot(
+    to_explore: list[complex],
+    perimeter: int = 0,
+    plot: list[complex] | None = None,
+) -> set[complex]:
     """Recursively explore the map to get a plot of the type at position `m`."""
-    position = plot_stack[-1]
+    if not plot:
+        plot = to_explore.copy()
 
-    t = MAP[position]
-    for direction in DIRECTIONS:
-        next_tile = position + direction
+    while to_explore:
+        position = to_explore.pop()
+        tile_value = MAP[position]
 
-        if next_tile in plot_stack:
-            # We've already expanded the proposed 'next' tile.
-            continue
+        for direction in DIRECTIONS:
+            next_tile = position + direction
 
-        next_tile_value = MAP.get(next_tile)
+            if next_tile in plot:
+                # We've already expanded the proposed 'next' tile.
+                continue
 
-        if next_tile_value == t:
-            # Add this to the plot
-            # expand that tile
-            plot_stack.append(next_tile)
-            plot_stack, perimeter = expand_plot(plot_stack, perimeter)
-        else:
-            perimeter += 1
-    return plot_stack, perimeter
+            if MAP.get(next_tile) == tile_value:
+                # Add this to the plot and the list of tiles to explore
+                plot.append(next_tile)
+                to_explore.append(next_tile)
+            else:
+                perimeter += 1
+    return plot, perimeter
 
 
-plot, perimeter = expand_plot([38 + 0j])
-plot_area = len(plot)
+EXPLORED: set[complex] = set()
 
-assert plot_area == 1
-assert perimeter == 4
 
-# expanded_tiles = set()
-checked_tiles: set[complex] = set()
-for plot_type in T:
-    # Find plots:
-    for position in MAP:
-        if position in checked_tiles:
-            continue
-        # recursively get
+cost = 0  # area * perimeter
+n_plots = 0
+for position in MAP:
+    if position in EXPLORED:
+        continue
 
-        checked_tiles.add(position)
+    plot, perimeter = expand_plot([position])
+    plot_fence_cost = len(plot) * perimeter
+    type_ = MAP[position]
+    print(f"{type_} area {len(plot)} * {perimeter=} = {plot_fence_cost=}")
+
+    cost += plot_fence_cost
+    n_plots += 1
+    EXPLORED |= set(plot)
+
+assert len(EXPLORED) == len(MAP)
+
+print(f"{n_plots}")
+print(f"{cost}")
