@@ -83,8 +83,34 @@ def part_one(map_: MapType) -> int:
     return n
 
 
+def part_two(map_: MapType) -> int:
+    """A new way of valuing trailheads is their *rating*: the number of
+    distinct trails which begin at the given trailhead.
+
+    * positions can be used in multiple trails
+
+    """
+
+    class NoAddSet(set):
+        def add(self, value) -> None:
+            pass
+
+    n = 0
+    for trailhead in get_trailheads(map_):
+        reachable_tiles = compute_reachable_tiles(
+            map_, trailhead, reachable_tiles=NoAddSet()
+        )
+        trail_tails = compute_trail_tails(map_, reachable_tiles)
+        n += trail_tails
+
+    return n
+
+
 with open("day_10.txt") as f:
     map_ = read_input(f.read())
     part_one_answer = part_one(map_)
     assert part_one_answer == 587
     print(f"{part_one_answer}")
+
+    part_two_answer = part_one(map_)
+    print(f"{part_two_answer}")
